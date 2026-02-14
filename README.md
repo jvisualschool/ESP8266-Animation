@@ -1,92 +1,41 @@
-# 🏛️ ESP8266 OLED Mathematical Art & Game Gallery
+# 📟 ESP8266 IoT Mini Billboard
 
-ESP8266과 0.96" I2C OLED(Yellow/Blue)를 활용한 **초정밀 애니메이션 및 정보 모니터링 시스템**입니다. 28가지 이상의 수학적 예술, 레트로 게임 액션, 그리고 실시간 정보를 한데 모은 디지털 오브제 프로젝트입니다.
+ESP8266과 0.96" OLED를 활용한 **웹 제어 기반 스마트 전광판** 프로젝트입니다. 스마트폰이나 PC의 웹 브라우저를 통해 원하는 문장과 애니메이션을 실시간으로 디스플레이에 전송할 수 있습니다.
 
-## 🛠️ 설정 가이드 (Setup Guide)
+## ✨ 주요 특징 (Key Features)
 
-프로젝트를 정상적으로 사용하기 위해 `include/config.h` 파일을 설정해야 합니다. (`config.h.example` 파일을 복사하여 사용하세요.)
+- **Web UI Control**: ESP8266의 IP로 접속하여 텍스트를 즉시 변경 가능.
+- **Vibrant Animations**: 5가지의 역동적인 텍스트 애니메이션 제공.
+- **Premium Aesthetics**: 프리미엄 글래스모피즘(Glassmorphism) 디자인의 웹 대시보드.
+- **mDNS 지원**: `http://billboard.local`로 간편하게 접속 가능 (네트워크 환경에 따라 상이).
 
-### 1. WiFi 접속 설정
+## 🚀 시작하기 (Getting Started)
 
-`include/config.h` 파일 내의 `WIFI_SSID`와 `WIFI_PASSWORD`를 자신의 환경에 맞게 수정합니다.
-
+### 1. WiFi 설정
+`include/config.h` 파일을 열어 자신의 WiFi 정보를 입력합니다.
 ```cpp
-#define WIFI_SSID "내_와이파이_이름"
-#define WIFI_PASSWORD "비밀번호"
+const char* WIFI_SSID = "WiFi_이름";
+const char* WIFI_PASSWORD = "비밀번호";
 ```
 
-### 2. 시간 동기화 (NTP)
+### 2. 업로드
+PlatformIO를 사용하여 코드를 빌드하고 ESP8266에 업로드합니다.
 
-별도의 RTC 모듈 없이 인터넷을 통해 NTP(Network Time Protocol) 서버에서 시간을 가져옵니다.
+### 3. 접속 및 제어
+1. 시리얼 모니터(74880 baud) 또는 OLED 액정에 표시된 **IP 주소**를 확인합니다.
+2. 같은 WiFi에 연결된 PC/스마트폰 브라우저에서 해당 IP 주소에 접속합니다.
+3. 원하는 문장을 입력하고 애니메이션을 선택한 후 **SEND TO DISPLAY** 버튼을 누릅니다.
 
-- **NTP 서버**: `pool.ntp.org`
-- **시간대 설정**: 서울 기준(GMT+9)으로 32400초(`9 * 3600`)가 설정되어 있습니다.
-- `setup()` 단계에서 자동으로 인터넷 상의 표준시와 동기화됩니다.
+## 🎭 제공되는 애니메이션 (Animations)
 
-### 3. 날씨 정보 얻는 방법
+1. **STATIC CENTER**: 화면 중앙에 텍스트를 고정합니다.
+2. **SMOOTH SCROLL**: 오른쪽에서 왼쪽으로 부드럽게 흐르는 전광판 효과입니다.
+3. **NEON BLINK**: 네온사인처럼 깜빡이며 시선을 끄는 효과입니다.
+4. **CYBER TYPEWRITER**: 커서와 함께 한 글자씩 타이핑되는 효과입니다.
+5. **PULSE SYNC**: 텍스트가 심장 박동처럼 커졌다 작아지는 효과입니다.
 
-[`wttr.in`](https://wttr.in)의 오픈 API를 활용하여 별도의 API 키 없이 실시간 날씨 정보를 가져옵니다.
-
-- **지역 설정**: 기본값으로 'Seoul(서울)'의 기온 정보(`format=%t`)를 요청합니다.
-- **업데이트 주기**: 시스템 부하와 데이터 사용량을 고려하여 **10분(600,000ms) 주기**로 새 정보를 갱신합니다.
-- **User-Agent**: `curl` 에이전트를 사용하여 불필요한 HTML 없이 텍스트 데이터만 깔끔하게 추출합니다.
-
-## 🚀 주요 기능 (Key Features)
-
-### 1. 실시간 정보 및 유틸리티 (Core Info)
-
-- **Big Analog Clock**: 클래식한 감성의 정교한 아날로그 시계.
-- **Digital Monitor**: WiFi 상태, CPU 속도, 가용 RAM, IP 주소 및 시스템 가동 시간 표시.
-- **Seoul Weather**: `wttr.in` API를 통한 실시간 서울 온도 정보 제공 (10분 주기 업데이트).
-
-### 2. 택티컬 모니터링 (Tactical Suite)
-
-- **Audio Spectrum**: 시선 강탈 16채널 오디오 비주얼라이저 시뮬레이션.
-- **Load Monitor**: 시스템 부하를 전하는 역동적인 수직 막대 그래프.
-- **Fighter Radar**: 전투기 레이더망을 형상화한 스캔 애니메이션.
-
-### 3. 레트로 게임 & 액션 아트 (Game & Action)
-
-- **Classic Games**: 테트리스(Tetris), 로드러너(Lode Runner), 페르시아의 왕자(Prince of Persia)의 명장면을 픽셀 아트로 재현.
-- **Dynamic Action**: 과녁 명중(Bullseye), 광선검 결투(Lightsaber Duel), 산맥 일출(Sunrise) 등 스토리텔링 애니메이션.
-
-### 4. 수학적 예술 갤러리 (Mathematical Art)
-
-- **Complex Curves**: 리사주 곡선(Lissajous), 로렌츠 끌개(Lorenz Attractor), 황금 나선(Golden Spiral).
-- **Geometric Fractals**: 시에르핀스키 삼각형(Sierpinski), 64가지 패턴의 무아레(Moire) 간섭 무늬.
-- **3D Wireframes**: 회전하는 3D 큐브/피라미드, 3D 토러스(Torus), DNA 나선, 행성 궤도 공전.
-- **Visual Effects**: 매트릭스 디지털 레인(Matrix), 워프 스피드(Warp Speed), 네모네모 심장 비트(Heart Pulse).
-
-## 💻 웹 시뮬레이터 (Web Simulator)
-
-- `index.html` 파일을 통해 실제 하드웨어가 없어도 브라우저(Chrome 추천)에서 28개 이상의 애니메이션을 감상할 수 있습니다.
-- **Pixel-Perfect**: 128x64 해상도 그대로의 초정밀 픽셀 렌더링.
-- **Pixel Grid**: 실제 OLED 소자를 들여다보는 듯한 격자 효과 토글 지원.
-
-## 🛠 하드웨어 구성 (Hardware)
-
-- **MCU**: ESP8266 (NodeMCU / Wemos D1 mini 등)
-- **Display**: 0.96" I2C OLED (128x64, SSD1306)
-- **Wiring**:
-  - SDA -> GPIO 14 (D5)
-  - SCL -> GPIO 12 (D6)
-  - VCC -> 3.3V
-  - GND -> GND
-
-## 📦 개발 환경 및 라이브러리
-
-- **IDE**: PlatformIO
-- **Framework**: Arduino
-- **Libraries**:
-  - `Adafruit GFX Library`
-  - `Adafruit SSD1306`
-  - `ESP8266WiFi`
-  - `ESP8266HTTPClient`
-
-## 🕹 조작 방법
-
-- 별도의 하드웨어 조작 없이 **3.5초마다** 자동으로 페이지가 전환됩니다. (시뮬레이터는 버튼 조작 가능)
+## 💻 웹 시뮬레이터 (Simulator)
+`index.html` 파일을 브라우저로 열면 실제 하드웨어가 없어도 동일한 기능을 미리 체험해 볼 수 있습니다.
 
 ---
-
-_Created with ❤️ by Jinho Jung with Antigravity_
+_Created with ❤️ by Antigravity_
