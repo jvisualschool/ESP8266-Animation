@@ -3,149 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Billboard Simulator</title>
+    <title>ESP8266 OLED Simulator</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap');
-        :root { --oled-blue: #00d4ff; --bg-dark: #050505; --frame-color: #111; }
-        body { 
-            margin: 0; background-color: var(--bg-dark); color: white; 
-            font-family: 'Orbitron', sans-serif; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; height: 100vh; overflow: hidden;
+
+        :root {
+            --oled-blue: #00d4ff;
+            --oled-yellow: #ffd700;
+            --bg-dark: #050505;
+            --frame-color: #111;
         }
-        .container { 
-            position: relative; padding: 30px; background: rgba(255, 255, 255, 0.02); 
-            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.05); 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8); text-align: center;
-            backdrop-filter: blur(10px);
+
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
         }
-        h1 { font-size: 1.2rem; margin-bottom: 25px; letter-spacing: 5px; color: var(--oled-blue); text-shadow: 0 0 10px var(--oled-blue); text-transform: uppercase; }
-        .oled-display-container { 
-            position: relative; width: 640px; height: 320px; background: #000; 
-            border: 10px solid var(--frame-color); border-radius: 8px; box-shadow: 0 0 0 2px #333;
+
+        .container {
+            position: relative;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            text-align: center;
         }
-        canvas { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
-        .pixel-grid { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
-            background-size: 5px 5px; background-image: linear-gradient(to right, rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.5) 1px, transparent 1px);
+
+        h1 {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            color: var(--oled-blue);
+            text-shadow: 0 0 10px var(--oled-blue);
+            text-transform: uppercase;
         }
-        .controls { margin-top: 30px; display: grid; gap: 15px; grid-template-columns: 1fr 1fr; }
-        input[type="text"] {
-            grid-column: span 2; padding: 12px; border-radius: 8px; background: #222; border: 1px solid #444;
-            color: white; font-family: 'Orbitron'; font-size: 1rem; outline: none; border-color: var(--oled-blue);
+
+        .oled-display-container {
+            position: relative;
+            width: 768px; /* 128 * 6 */
+            height: 384px; /* 64 * 6 */
+            background: #000;
+            border: 8px solid var(--frame-color);
+            border-radius: 4px;
+            padding: 0;
+            box-shadow: 0 0 0 2px #333;
         }
-        select {
-            padding: 10px; border-radius: 8px; background: #222; border: 1px solid #444; color: white;
-            font-family: 'Orbitron'; cursor: pointer;
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            display: block;
         }
+
+        .pixel-grid {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            background-size: 6px 6px;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.5) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.5) 1px, transparent 1px);
+            opacity: 0.8;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
         .btn {
-            padding: 10px; border-radius: 8px; background: var(--oled-blue); color: black; font-weight: bold;
-            border: none; cursor: pointer; font-family: 'Orbitron'; transition: 0.2s;
+            background: transparent;
+            border: 1px solid var(--oled-blue);
+            color: var(--oled-blue);
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.2s;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            min-width: 80px;
         }
-        .btn:hover { box-shadow: 0 0 20px var(--oled-blue); transform: scale(1.05); }
+
+        .btn:hover {
+            background: var(--oled-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--oled-blue);
+        }
+
+        .status-bar {
+            margin-top: 15px;
+            font-size: 0.6rem;
+            color: #555;
+            font-family: 'Press Start 2P', cursive;
+            letter-spacing: 1px;
+        }
+
+        .footer-info {
+            position: absolute;
+            bottom: -40px;
+            width: 100%;
+            font-size: 0.65rem;
+            color: #333;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>BILLBOARD SIMULATOR</h1>
+        <h1>ESP8266 OLED Simulator</h1>
+        
         <div class="oled-display-container">
             <div class="pixel-grid"></div>
             <canvas id="oled" width="128" height="64"></canvas>
         </div>
+
         <div class="controls">
-            <input type="text" id="msgInput" placeholder="Enter message..." value="Waiting...">
-            <select id="animSelect">
-                <option value="0">STATIC CENTER</option>
-                <option value="1">SMOOTH SCROLL</option>
-                <option value="2">NEON BLINK</option>
-                <option value="3">CYBER TYPEWRITER</option>
-                <option value="4">PULSE SYNC</option>
-            </select>
-            <button class="btn" onclick="updateBillboard()">UPDATE DISPLAY</button>
+            <button class="btn" onclick="prevPage()">PREV</button>
+            <button class="btn" id="play-pause" onclick="toggleAuto()">PAUSE</button>
+            <button class="btn" id="grid-toggle" onclick="toggleGrid()">GRID ON</button>
+            <button class="btn" onclick="nextPage()">NEXT</button>
         </div>
+
+        <div class="status-bar" id="page-label">0/27: BIG ANALOG CLOCK</div>
+        
+        <div class="footer-info">FULL 28 ANIMATION MASTERPIECE • 128x64 NATIVE</div>
     </div>
+
     <script>
         const canvas = document.getElementById('oled');
         const ctx = canvas.getContext('2d');
-        let currentMsg = "Waiting...";
-        let currentAnim = 0;
-        let xPos = 128;
-        let charIndex = 0;
-        let scale = 1.0;
-        let scaleUp = true;
-        let blinkState = true;
-        let lastUpdate = Date.now();
-        let lastBlink = Date.now();
-        let lastType = Date.now();
+        const pageLabel = document.getElementById('page-label');
+        const grid = document.querySelector('.pixel-grid');
+        
+        let currentPage = 0;
+        let isAuto = true;
+        let lastPageTime = Date.now();
+        const pageDuration = 3500;
+        let frameCount = 0;
 
-        function updateBillboard() {
-            currentMsg = document.getElementById('msgInput').value || "EMPTY";
-            currentAnim = parseInt(document.getElementById('animSelect').value);
-            xPos = 128;
-            charIndex = 0;
-            scale = 1.0;
+        const BLUE = "#00d4ff";
+        const YELLOW = "#ffd700";
+
+        function drawHeader(title) {
+            ctx.fillStyle = YELLOW;
+            ctx.font = "8px 'Press Start 2P', monospace";
+            ctx.textBaseline = "top";
+            ctx.fillText(title, 0, 0);
+            ctx.fillRect(0, 10, 128, 1);
         }
 
-        function draw() {
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, 128, 64);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 16px Arial"; // Approximation of OLED sizes
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
+        // --- Shared State for specific animations ---
+        let specVals = Array(16).fill(0);
+        let specPeaks = Array(16).fill(0);
+        let arrowX = 0; let arrowHit = false;
+        let tetrisY = 12; let tetrisState = 0;
+        let lodeX = 0; let lodeDig = false;
+        let princeX = 0; let princeY = 40; let princeJump = false; let princeT = 0;
+        let lorenzX = 0.1, lorenzY = 0, lorenzZ = 0;
+        let lorenzPts = [];
+        let sierpX = 64, sierpY = 32;
+        let matrixR = Array(16).fill(0).map(() => Math.random()*64);
 
-            const now = Date.now();
+        // --- Animations ---
 
-            if (currentAnim == 0) { // Static
-                ctx.fillText(currentMsg, 64, 32);
-            } 
-            else if (currentAnim == 1) { // Scroll
-                if (now - lastUpdate > 30) {
-                    xPos -= 2;
-                    let metrics = ctx.measureText(currentMsg);
-                    if (xPos < -metrics.width) xPos = 128;
-                    lastUpdate = now;
-                }
-                ctx.textAlign = "left";
-                ctx.fillText(currentMsg, xPos, 32);
-            }
-            else if (currentAnim == 2) { // Blink
-                if (now - lastBlink > 500) {
-                    blinkState = !blinkState;
-                    lastBlink = now;
-                }
-                if (blinkState) ctx.fillText(currentMsg, 64, 32);
-            }
-            else if (currentAnim == 3) { // Typewriter
-                if (now - lastType > 150) {
-                    if (charIndex < currentMsg.length) {
-                        charIndex++;
-                        lastType = now;
-                    } else if (now - lastType > 2000) {
-                        charIndex = 0;
-                        lastType = now;
+        const animations = [
+            // 0: Big Analog Clock
+            () => {
+                const cx=64, cy=32, r=31; ctx.strokeStyle=BLUE;
+                for(let i=0;i<12;i++){ let a=i*30*Math.PI/180; ctx.beginPath(); ctx.moveTo(cx+(r-3)*Math.cos(a),cy+(r-3)*Math.sin(a)); ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a)); ctx.stroke(); }
+                ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+                const n=new Date(); const s=n.getSeconds(), m=n.getMinutes(), h=n.getHours();
+                const hand=(a,l)=>{ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+l*Math.cos(a-Math.PI/2),cy+l*Math.sin(a-Math.PI/2)); ctx.stroke();};
+                hand(s*6*Math.PI/180, 28); hand(m*6*Math.PI/180, 24); hand((h%12*30+m/2)*Math.PI/180, 18);
+            },
+            // 1: Big Digital Clock
+            () => {
+                drawHeader("CURRENT TIME"); ctx.fillStyle=BLUE;
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-GB', {hour12: false});
+                const date = now.toISOString().split('T')[0];
+                ctx.font = "bold 16px Orbitron"; ctx.fillText(time, 15, 25);
+                ctx.font = "8px monospace"; ctx.fillText(date, 30, 50);
+            },
+            // 2: System Info
+            () => {
+                drawHeader("SYSTEM INFO"); ctx.fillStyle=BLUE; ctx.font="8px 'Press Start 2P'";
+                ctx.fillText("CPU: 80 MHz", 0, 20); ctx.fillText("RAM: 32 KB", 0, 31);
+                ctx.fillText("IP: 192.168.0.22", 0, 42); ctx.fillText("UP: "+Math.floor(frameCount/60)+"S", 0, 53);
+            },
+            // 3: Weather
+            () => {
+                drawHeader("SEOUL WEATHER"); ctx.fillStyle=BLUE; ctx.font="8px 'Press Start 2P'";
+                ctx.fillText("South Korea, Seoul", 10, 20); ctx.font="24px Orbitron"; ctx.fillText("+2 C", 30, 38);
+            },
+            // 4: Audio Spectrum
+            () => {
+                drawHeader("AUDIO SPECTRUM"); ctx.fillStyle=BLUE;
+                if(frameCount % 3 === 0) {
+                    for(let i=0; i<16; i++) {
+                        let t = 5 + Math.random()*40;
+                        if(specVals[i] < t) specVals[i] += 5; else specVals[i] -= 3;
+                        if(specVals[i] > specPeaks[i]) specPeaks[i]=specVals[i]; else specPeaks[i]-=1;
                     }
                 }
-                let sub = currentMsg.substring(0, charIndex);
-                if (Math.floor(now / 500) % 2 == 0) sub += "_";
-                ctx.fillText(sub, 64, 32);
-            }
-            else if (currentAnim == 4) { // Pulse
-                if (now - lastUpdate > 40) {
-                    if (scaleUp) scale += 0.05; else scale -= 0.05;
-                    if (scale > 1.3) scaleUp = false;
-                    if (scale < 0.7) scaleUp = true;
-                    lastUpdate = now;
+                for(let i=0; i<16; i++) {
+                    ctx.fillRect(i*8+1, 64-specVals[i], 6, specVals[i]);
+                    ctx.fillRect(i*8+1, 64-specPeaks[i]-2, 6, 1);
                 }
-                ctx.save();
-                ctx.translate(64, 32);
-                ctx.scale(scale, scale);
-                ctx.fillText(currentMsg, 0, 0);
-                ctx.restore();
+            },
+            // 5: Bar Graph
+            () => {
+                drawHeader("LOAD MONITOR"); ctx.strokeStyle=BLUE;
+                for(let i=0; i<4; i++) {
+                    let h = 10 + (Math.sin(frameCount*0.05 + i) + 1) * 20;
+                    ctx.strokeRect(15+i*30, 20, 10, 42);
+                    ctx.fillStyle=BLUE; ctx.fillRect(15+i*30, 62-h, 10, h);
+                }
+            },
+            // 6: Fighter Radar
+            () => {
+               drawHeader("FIGHTER RADAR"); const cx=64,cy=37,r=25; ctx.strokeStyle=BLUE;
+               ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+               ctx.beginPath(); ctx.arc(cx,cy,r/2,0,Math.PI*2); ctx.stroke();
+               let a = (frameCount*0.1) % (Math.PI*2);
+               ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r); ctx.stroke();
+               ctx.fillStyle=BLUE; if(frameCount % 60 < 30) ctx.fillRect(cx+10, cy-10, 2, 2);
+            },
+            // 7: Arrow Target
+            () => {
+                drawHeader("BULLSEYE SHOT"); const cx=100, cy=37; ctx.strokeStyle=BLUE;
+                ctx.beginPath(); ctx.arc(cx,cy,15,0,Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.stroke();
+                if(frameCount % 180 === 0) { arrowX=0; arrowHit=false; }
+                if(!arrowHit) { arrowX+=4; if(arrowX >= cx-5) arrowHit=true; }
+                ctx.fillStyle=BLUE;
+                ctx.fillRect(arrowX-20, cy, 20, 1);
+                ctx.beginPath(); ctx.moveTo(arrowX,cy); ctx.lineTo(arrowX-4,cy-3); ctx.lineTo(arrowX-4,cy+3); ctx.fill();
+                if(arrowHit) ctx.fillText("HIT!", 0, 50);
+            },
+            // 8: Lightsaber Duel
+            () => {
+                drawHeader("LIGHTSABER DUEL");
+                let pos = Math.sin(frameCount*0.1)*30;
+                let x1 = 54+pos, x2 = 74-pos; ctx.strokeStyle=BLUE; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.moveTo(x1, 15); ctx.lineTo(x1+5, 55); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x2, 15); ctx.lineTo(x2-5, 55); ctx.stroke();
+                if(Math.abs(x1-x2) < 5) {
+                    ctx.fillStyle=YELLOW; for(let i=0;i<8;i++){ let a=i*Math.PI/4; ctx.fillRect(64+Math.cos(a)*10, 35+Math.sin(a)*10, 2, 2); }
+                }
+                ctx.lineWidth=1;
+            },
+            // 9: Mountain Sunrise
+            () => {
+                drawHeader("MOUNTAIN SUNRISE"); ctx.strokeStyle=BLUE;
+                ctx.beginPath(); ctx.moveTo(0,63); ctx.lineTo(40,30); ctx.lineTo(80,63); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(60,63); ctx.lineTo(100,40); ctx.lineTo(128,63); ctx.stroke();
+                let sy = 70 - (frameCount % 300) * 0.2;
+                ctx.beginPath(); ctx.arc(64,sy,8,0,Math.PI*2); ctx.stroke();
+                for(let i=0;i<8;i++){ let a=i*Math.PI/4; ctx.beginPath(); ctx.moveTo(64+Math.cos(a)*10, sy+Math.sin(a)*10); ctx.lineTo(64+Math.cos(a)*14, sy+Math.sin(a)*14); ctx.stroke(); }
+            },
+            // 10: Tetris
+            () => {
+                drawHeader("TETRIS CLASSIC"); ctx.strokeStyle=BLUE; ctx.strokeRect(40,12,48,50);
+                if(frameCount % 6 === 0) { tetrisY += 2; if(tetrisY > 48) tetrisY=12; }
+                ctx.fillStyle=BLUE; ctx.fillRect(60, tetrisY, 8, 16);
+            },
+            // 11: Lode Runner
+            () => {
+                drawHeader("LODE RUNNER DIG"); ctx.fillStyle=BLUE; ctx.fillRect(0,50,128,14);
+                if(frameCount % 5 === 0) { lodeX+=3; if(lodeX > 120) lodeX=0; }
+                ctx.fillRect(lodeX, 40, 6, 10); if(lodeX > 60) ctx.clearRect(lodeX+10, 50, 8, 8);
+            },
+            // 12: Prince of Persia
+            () => {
+                drawHeader("PRINCE JUMP"); ctx.fillStyle=BLUE; ctx.fillRect(0,50,50,14); ctx.fillRect(90,50,38,14);
+                if(frameCount % 3 === 0) {
+                    if(!princeJump) { princeX+=4; if(princeX>40)princeJump=true; }
+                    else { princeT+=0.1; princeX+=4; princeY=40-25*Math.sin(princeT*Math.PI/2); if(princeT>=2){ princeJump=false; princeT=0; princeX=0; princeY=40; } }
+                }
+                ctx.fillRect(princeX, princeY, 6, 10);
+            },
+            // 13: Lissajous
+            () => {
+                drawHeader("LISSAJOUS CURVES"); ctx.strokeStyle=BLUE; ctx.beginPath();
+                let a=3, b=2, d=frameCount*0.05;
+                for(let i=0;i<=80;i++){ let t=i*0.1; let x=64+45*Math.sin(a*t+d), y=37+22*Math.sin(b*t); if(i==0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+                ctx.stroke();
+            },
+            // 14: Lorenz
+            () => {
+                drawHeader("LORENZ ATTRACTOR"); ctx.strokeStyle=BLUE;
+                let dt=0.01; let dx = (10*(lorenzY-lorenzX))*dt, dy = (lorenzX*(28-lorenzZ)-lorenzY)*dt, dz = (lorenzX*lorenzY-(8/3)*lorenzZ)*dt;
+                lorenzX+=dx; lorenzY+=dy; lorenzZ+=dz; lorenzPts.push([64+lorenzX*2, 60-lorenzZ]); if(lorenzPts.length > 80) lorenzPts.shift();
+                ctx.beginPath(); lorenzPts.forEach((p,i) => { if(i==0)ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); }); ctx.stroke();
+            },
+            // 15: Sierpinski
+            () => {
+                drawHeader("SIERPINSKI FRACTAL"); ctx.fillStyle=BLUE;
+                const tx=[64, 10, 118], ty=[15, 60, 60];
+                for(let i=0; i<50; i++){ let r=Math.floor(Math.random()*3); sierpX=(sierpX+tx[r])/2; sierpY=(sierpY+ty[r])/2; ctx.fillRect(sierpX,sierpY,1,1); }
+            },
+            // 16: 3D Torus
+            () => {
+                drawHeader("3D WIRE TORUS"); ctx.fillStyle=BLUE;
+                let A=frameCount*0.05, B=frameCount*0.03;
+                for(let p=0;p<6.28;p+=0.8){ for(let t=0;t<6.28;t+=0.4){
+                    let x=(2+Math.cos(t))*Math.cos(p), y=(2+Math.cos(t))*Math.sin(p), z=Math.sin(t);
+                    let nx=x*Math.cos(B)-y*Math.sin(B), ny=x*Math.sin(B)+y*Math.cos(B);
+                    let nz=ny*Math.sin(A)+z*Math.cos(A); ctx.fillRect(64+nx*12, 37+nz*12, 1, 1);
+                }}
+            },
+            // 17: Moire
+            () => {
+                drawHeader("MOIRE INTERFERENCE"); ctx.strokeStyle=BLUE;
+                for(let i=0;i<128;i+=4){ ctx.beginPath(); ctx.moveTo(i,12); ctx.lineTo(64+Math.cos(frameCount*0.02)*64, 64+Math.sin(frameCount*0.02)*64); ctx.stroke(); }
+            },
+            // 18: Rotating 3D
+            () => {
+                drawHeader("3D WIRE CUBE"); ctx.strokeStyle=BLUE;
+                let a = frameCount*0.05;
+                const rot=(x,z)=>{ return [x*Math.cos(a)+z*Math.sin(a), -x*Math.sin(a)+z*Math.cos(a)]; };
+                const nodes = [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+                const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+                const p = nodes.map(n => { let r=rot(n[0],n[2]); return [64+r[0]*20, 37+n[1]*20]; });
+                edges.forEach(e => { ctx.beginPath(); ctx.moveTo(p[e[0]][0],p[e[0]][1]); ctx.lineTo(p[e[1]][0],p[e[1]][1]); ctx.stroke(); });
+            },
+            // 19: DNA Helix
+            () => {
+                drawHeader("3D DNA HELIX"); ctx.fillStyle=BLUE;
+                for(let i=0; i<20; i++){ let a=i*0.4+frameCount*0.1; ctx.fillRect(64+Math.cos(a)*20, 15+i*2.2, 2, 2); ctx.fillRect(64+Math.cos(a+Math.PI)*20, 15+i*2.2, 2, 2); if(i%2==0) { ctx.fillRect(64-20, 15+i*2.2, 40, 1); } }
+            },
+            // 20: Neural Plexus
+            () => {
+                drawHeader("NEURAL PLEXUS"); ctx.strokeStyle=BLUE;
+                for(let i=0; i<5; i++){ let x=64+Math.sin(frameCount*0.02+i)*40, y=37+Math.cos(frameCount*0.03+i)*20; ctx.strokeRect(x,y,1,1); }
+            },
+            // 21: Matrix
+            () => {
+                drawHeader("THE MATRIX"); ctx.fillStyle=BLUE;
+                for(let i=0; i<16; i++){ matrixR[i]+=1; if(matrixR[i]>64)matrixR[i]=0; ctx.fillRect(i*8, 12+matrixR[i], 2, 6); }
+            },
+            // 22: Warp Speed
+            () => {
+                drawHeader("WARP SPEED"); ctx.fillStyle=BLUE;
+                for(let i=0; i<20; i++){ let z=128-(frameCount+i*10)%128; ctx.fillRect(64+Math.sin(i)*1000/z, 32+Math.cos(i)*1000/z, 1, 1); }
+            },
+            // 23: Sine Wave
+            () => {
+                drawHeader("SINE WAVEFORM"); ctx.strokeStyle=BLUE; ctx.beginPath();
+                for(let i=0;i<128;i++){ let y=37+Math.sin(i*0.1+frameCount*0.1)*15; if(i==0)ctx.moveTo(i,y); else ctx.lineTo(i,y); } ctx.stroke();
+            },
+            // 24: Golden Spiral
+            () => {
+                drawHeader("GOLDEN SPIRAL"); ctx.fillStyle=BLUE;
+                for(let i=0;i<60;i++){ let a=i*0.2+frameCount*0.02, d=Math.sqrt(i)*7; ctx.fillRect(64+Math.cos(a)*d, 37+Math.sin(a)*d, 1, 1); }
+            },
+            // 25: Planetary Orbit
+            () => {
+                drawHeader("PLANETARY ORBIT"); ctx.strokeStyle=BLUE;
+                ctx.beginPath(); ctx.arc(64,37,6,0,Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(64,37,18,0,Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(64,37,26,0,Math.PI*2); ctx.stroke();
+                ctx.fillStyle=BLUE;
+                ctx.fillRect(64+Math.cos(frameCount*0.05)*18-2, 37+Math.sin(frameCount*0.05)*18-2, 4, 4);
+                ctx.fillRect(64+Math.cos(-frameCount*0.03)*26-2, 37+Math.sin(-frameCount*0.03)*26-2, 4, 4);
+            },
+            // 26: Minimal Clock
+            () => {
+                drawHeader("MINIMAL CLOCK"); ctx.strokeStyle=BLUE; 
+                ctx.strokeRect(50,25,28,28); ctx.fillStyle=BLUE;
+                const n=new Date(); ctx.fillText(n.getHours()+":"+n.getMinutes(), 55, 33);
+            },
+            // 27: Line Art Heart
+            () => {
+                drawHeader("LINE ART HEART"); ctx.strokeStyle=BLUE;
+                let s = 12 + Math.abs(Math.sin(frameCount*0.1)*8);
+                ctx.beginPath(); ctx.arc(64-s/2,30,s/2,Math.PI,0); ctx.arc(64+s/2,30,s/2,Math.PI,0);
+                ctx.lineTo(64, 30+s); ctx.lineTo(64-s, 30); ctx.stroke();
             }
+        ];
 
-            requestAnimationFrame(draw);
+        function animate() {
+            ctx.fillStyle="#000"; ctx.fillRect(0,0,128,64);
+            animations[currentPage]();
+            if(isAuto && Date.now()-lastPageTime > pageDuration) nextPage();
+            frameCount++;
+            requestAnimationFrame(animate);
         }
-        draw();
+
+        const pageNames = [
+            "BIG ANALOG CLOCK", "BIG DIGITAL CLOCK", "SYSTEM INFO", "SEOUL WEATHER", "AUDIO SPECTRUM", "BAR GRAPH", "FIGHTER RADAR", "ARROW TARGET", 
+            "LIGHTSABER DUEL", "MOUNTAIN SUNRISE", "TETRIS", "LODE RUNNER", "PRINCE OF PERSIA", "LISSAJOUS CURVES", "LORENZ ATTRACTOR", "SIERPINSKI FRACTAL",
+            "3D WIRE TORUS", "MOIRE INTERFERENCE", "3D WIRE CUBE", "DNA HELIX", "NEURAL PLEXUS", "THE MATRIX", "WARP SPEED", "SINE WAVEFORM", "GOLDEN SPIRAL",
+            "PLANETARY ORBIT", "MINIMAL CLOCK", "LINE ART HEART"
+        ];
+
+        function updateStatus() { pageLabel.innerText = `${currentPage}/27: ${pageNames[currentPage]}`; }
+        function nextPage() { currentPage=(currentPage+1)%28; lastPageTime=Date.now(); updateStatus(); }
+        function prevPage() { currentPage=(currentPage-1+28)%28; lastPageTime=Date.now(); updateStatus(); }
+        function toggleAuto() { isAuto=!isAuto; document.getElementById('play-pause').innerText=isAuto?"PAUSE":"PLAY"; }
+        function toggleGrid() { 
+            const show = grid.style.display === 'none';
+            grid.style.display = show ? 'block' : 'none';
+            document.getElementById('grid-toggle').innerText = show ? "GRID ON" : "GRID OFF";
+        }
+
+        animate();
+        updateStatus();
     </script>
 </body>
 </html>
